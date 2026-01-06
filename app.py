@@ -4,9 +4,8 @@ import pandas as pd
 # --- CONFIGURATION ---
 st.set_page_config(page_title="CardAi MVP", page_icon="🃏", layout="wide")
 
-# --- SESSION STATE (Temporary Database) ---
-# [cite_start]This mimics the "Virtual Collection Portfolio" mentioned in the doc[cite: 16].
-# We use session_state so data persists while you navigate between tabs.
+# --- SESSION STATE ---
+# This mimics the "Virtual Collection Portfolio" mentioned in your plan.
 if 'collection' not in st.session_state:
     st.session_state.collection = pd.DataFrame(columns=[
         "Player", "Team", "Era", "Condition", "Location", "Value_Est"
@@ -24,11 +23,9 @@ if menu == "Dashboard":
     st.title("CardAi Dashboard")
     st.markdown("### Welcome to your digital vault.")
     
-    # Key Metrics based on MVP goals
     if not st.session_state.collection.empty:
         total_cards = len(st.session_state.collection)
         total_value = st.session_state.collection['Value_Est'].sum()
-        # Find the most common storage location
         top_storage = st.session_state.collection['Location'].mode()
         top_storage_display = top_storage[0] if not top_storage.empty else "N/A"
     else:
@@ -43,29 +40,26 @@ if menu == "Dashboard":
 
     st.info("💡 Tip: Go to 'Add Card' to start digitizing your assets.")
 
-# --- PAGE: ADD CARD (FIXED) ---
+# --- PAGE: ADD CARD ---
 elif menu == "Add Card":
     st.header("Scan & Catalog")
-    [cite_start]st.write("Upload card images and tag details manually (Phase 1 MVP).") [cite: 17]
+    st.write("Upload card images and tag details manually (Phase 1 MVP).")
     
-    # FIX: All form elements MUST be inside the 'with st.form' block
     with st.form("add_card_form"):
         col1, col2 = st.columns(2)
         
         with col1:
             player = st.text_input("Player Name", placeholder="e.g. Michael Jordan")
             team = st.text_input("Team", placeholder="e.g. Chicago Bulls")
-            [cite_start]era = st.selectbox("Era", ["Modern", "Junk Wax", "Vintage", "Pre-War"]) [cite: 18]
+            era = st.selectbox("Era", ["Modern", "Junk Wax", "Vintage", "Pre-War"])
         
         with col2:
-            [cite_start]condition = st.selectbox("Condition/Grade", ["Raw", "PSA 10", "PSA 9", "BGS 9.5", "SGC 10"]) [cite: 18]
-            # [cite_start]Feature: Card Storage Tracker [cite: 21]
-            [cite_start]location = st.selectbox("Storage Location", ["Binder A", "Box in Garage", "Safe", "Top Loader Box"]) [cite: 22]
+            condition = st.selectbox("Condition/Grade", ["Raw", "PSA 10", "PSA 9", "BGS 9.5", "SGC 10"])
+            location = st.selectbox("Storage Location", ["Binder A", "Box in Garage", "Safe", "Top Loader Box"])
             value = st.number_input("Estimated Value ($)", min_value=0.0, step=0.01)
 
-        [cite_start]uploaded_file = st.file_uploader("Upload Card Image") [cite: 17]
+        uploaded_file = st.file_uploader("Upload Card Image")
         
-        # FIX: The submit button is now properly inside the form
         submitted = st.form_submit_button("Add to Portfolio")
         
         if submitted:
@@ -77,7 +71,6 @@ elif menu == "Add Card":
                 "Location": location,
                 "Value_Est": value
             }
-            # Add the new card to the session state dataframe
             st.session_state.collection = pd.concat(
                 [st.session_state.collection, pd.DataFrame([new_card])], 
                 ignore_index=True
@@ -87,10 +80,9 @@ elif menu == "Add Card":
 # --- PAGE: MY PORTFOLIO ---
 elif menu == "My Portfolio":
     st.header("Virtual Collection Portfolio")
-    [cite_start]st.write("Sort by player, team, era, stats, grading, condition.") [cite: 18]
+    st.write("Sort by player, team, era, stats, grading, condition.")
     
     if not st.session_state.collection.empty:
-        # Search/Filter
         filter_team = st.text_input("Filter by Team:")
         df_view = st.session_state.collection
         
@@ -104,9 +96,8 @@ elif menu == "My Portfolio":
 # --- PAGE: MARKET ALERTS ---
 elif menu == "Market Alerts":
     st.header("Market Alerts & Trends")
-    [cite_start]st.write("Real-time value tracking and upcoming drops.") [cite: 24]
+    st.write("Real-time value tracking and upcoming drops.")
     
-    # [cite_start]Mock Data for "Upcoming Product Drops" [cite: 27]
     st.subheader("Upcoming Drops 📅")
     drops = [
         {"Date": "2026-06-15", "Product": "Topps Chrome MLB", "Type": "Hobby Box"},
@@ -118,10 +109,9 @@ elif menu == "Market Alerts":
 # --- PAGE: STORAGE TRACKER ---
 elif menu == "Storage Tracker":
     st.header("Storage Location Tracker")
-    [cite_start]st.write("Avoid misplacement by tracking where physical cards are stored.") [cite: 23]
+    st.write("Avoid misplacement by tracking where physical cards are stored.")
     
     if not st.session_state.collection.empty:
-        # Group by location to see count and value per box/binder
         storage_summary = st.session_state.collection.groupby("Location").agg(
             Count=('Player', 'count'),
             Total_Value=('Value_Est', 'sum')
@@ -135,23 +125,20 @@ elif menu == "Storage Tracker":
 # --- PAGE: SOCIAL SHARING ---
 elif menu == "Social Sharing":
     st.header("Social Media Exporter 📱")
-    [cite_start]st.write("Generate a caption for Instagram, Threads, or Reddit.") [cite: 30]
+    st.write("Generate a caption for Instagram, Threads, or Reddit.")
     
     if not st.session_state.collection.empty:
-        # User selects which card to showcase
         card_options = st.session_state.collection.apply(
             lambda x: f"{x['Player']} ({x['Era']})", axis=1
         )
         selected_index = st.selectbox("Select a Card to Showcase:", card_options.index)
         selected_card = st.session_state.collection.iloc[selected_index]
         
-        # Platform Selection
         platform = st.radio("Select Platform:", ["Instagram/TikTok", "Reddit/Discord"])
         
         st.subheader("Preview & Copy:")
         
         if platform == "Instagram/TikTok":
-            # Instagram style: Emojis, short text, hashtags
             caption = f"""
 🔥 JUST ADDED TO THE VAULT! 🔥
 
@@ -163,7 +150,6 @@ elif menu == "Social Sharing":
 Managed via #CardAi #TheHobby #CardCollecting #{selected_card['Team'].replace(' ', '')}
             """
         else:
-            # Reddit/Discord style: Markdown table format
             caption = f"""
 **[Showcase] Just picked up this {selected_card['Player']}!**
 
@@ -178,7 +164,5 @@ Managed via #CardAi #TheHobby #CardCollecting #{selected_card['Team'].replace(' 
             """
         
         st.code(caption, language="markdown")
-        st.success("Ready for social sharing! [MVP Goal]")
-        
     else:
         st.warning("Add cards to your portfolio to generate social posts.")
